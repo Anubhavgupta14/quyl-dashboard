@@ -71,13 +71,6 @@ const Home = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Error: {error}
-      </div>
-    );
-  }
 
   return (
     <Layout>
