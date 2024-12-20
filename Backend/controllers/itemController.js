@@ -32,7 +32,7 @@ const itemController = {
       });
       res.json(items);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch items' });
+      res.status(500).json({ error: `Failed to fetch items: ${error}` });
     }
   },
 
