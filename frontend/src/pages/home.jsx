@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { Button } from "../components/ui/button";
+import { toast } from "sonner";
 import Layout from "../component/layout";
 import { GoPlus } from "react-icons/go";
 import { FiHelpCircle, FiBell } from "react-icons/fi";
@@ -28,6 +29,15 @@ const Home = () => {
   const [isInitialFetch, setIsInitialFetch] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      dispatch(fetchItems({ search: searchQuery }));
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, dispatch]);
 
   const handleEditClick = (student) => {
     setEditingStudent(student);
@@ -40,7 +50,6 @@ const Home = () => {
 
   const handleConfirmDelete = async (id) => {
     try {
-      console.log(id,"ID to delete")
       await dispatch(deleteItem(id));
     } catch (error) {
       console.error('Failed to delete:', error);
@@ -78,6 +87,8 @@ const Home = () => {
             <Search className="absolute left-2 top-3 h-4 w-4 text-gray-500" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search your course"
               className="pl-8 pr-4 py-2 text-gray-500 rounded-md w-[450px] focus:outline-none"
             />

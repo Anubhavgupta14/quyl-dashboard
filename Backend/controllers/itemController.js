@@ -5,7 +5,24 @@ const itemController = {
   // Get all items
   getAllItems: async (req, res) => {
     try {
+      const { search } = req.query;
+    
+    const where = search ? {
+      OR: [
+        { studentName: { contains: search, mode: 'insensitive' } },
+        { cohort: { contains: search, mode: 'insensitive' } },
+        {
+          courses: {
+            some: {
+              title: { contains: search, mode: 'insensitive' }
+            }
+          }
+        }
+      ]
+    } : {};
+
       const items = await prisma.item.findMany({
+        where,
         include: {
           courses: true // Include related courses
         },
