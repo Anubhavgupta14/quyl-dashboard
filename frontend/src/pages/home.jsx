@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import {
   Select,
@@ -10,50 +10,65 @@ import {
 import { Button } from "../components/ui/button";
 import Layout from "../component/layout";
 import { GoPlus } from "react-icons/go";
-import { FiHelpCircle } from "react-icons/fi";
+import { FiHelpCircle, FiBell } from "react-icons/fi";
+import { MdDeleteOutline } from "react-icons/md";
 import { LuMessageSquareMore } from "react-icons/lu";
+import { MdOutlineModeEdit } from "react-icons/md";
 import { MdOutlineSegment } from "react-icons/md";
-import { FiBell } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchItems, deleteItem } from "../features/slice";
+import AddEditPopup from "../component/addEditPopup";
+import DeleteConfirmationPopup from "../component/deletePopup";
 
 const Home = () => {
-  const students = [
-    {
-      name: "Anshuman Kashyap",
-      cohort: "AY 2024-25",
-      dateJoined: "17. Nov, 2024",
-      lastLogin: "17. Nov, 2024 4:16 PM",
-      status: "active",
-    },
-    {
-      name: "Bansi Dadhaniya",
-      cohort: "AY 2024-25",
-      dateJoined: "17. Nov, 2024",
-      lastLogin: "17. Nov, 2024 4:16 PM",
-      status: "active",
-    },
-    {
-      name: "Chandrika Valotia",
-      cohort: "AY 2024-25",
-      dateJoined: "17. Nov, 2024",
-      lastLogin: "17. Nov, 2024 4:16 PM",
-      status: "inactive",
-    },
-    {
-      name: "Devang Dave",
-      cohort: "AY 2024-25",
-      dateJoined: "17. Nov, 2024",
-      lastLogin: "17. Nov, 2024 4:16 PM",
-      status: "active",
-    },
-    {
-      name: "Forum Bhatt",
-      cohort: "AY 2024-25",
-      dateJoined: "17. Nov, 2024",
-      lastLogin: "17. Nov, 2024 4:16 PM",
-      status: "active",
-    },
-    // Add remaining students...
-  ];
+  const dispatch = useDispatch();
+  const { items, status, error } = useSelector((state) => state.items);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [isInitialFetch, setIsInitialFetch] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  const handleEditClick = (student) => {
+    setEditingStudent(student);
+    setIsPopupOpen(true);
+  };
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async (id) => {
+    try {
+      console.log(id,"ID to delete")
+      await dispatch(deleteItem(id));
+    } catch (error) {
+      console.error('Failed to delete:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!isInitialFetch) {
+      dispatch(fetchItems());
+      setIsInitialFetch(true);
+    }
+  }, [isInitialFetch]);
+
+  if (status === "loading" && !items.length) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
     <Layout>
@@ -79,7 +94,11 @@ const Home = () => {
               <div className="h-[8px] w-[8px] bg-red-400 rounded-full absolute top-[-1px] right-[1px]"></div>
             </div>
             <div className="flex gap-3 items-center cursor-pointer">
-              <img src="./profile.jpg" className="h-[35px] rounded"></img>
+              <img
+                src="./profile.jpg"
+                className="h-[35px] rounded"
+                alt="profile"
+              />
               <p className="font-medium">Anubhav Gupta</p>
             </div>
           </div>
@@ -106,10 +125,11 @@ const Home = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button className="bg-[#e9ecf1] hover:bg-[#d9dde6] text-[#3d506c] font-semibold">
-              <GoPlus className="font-semibold"/> Add new Student
+            <Button className="bg-[#e9ecf1] hover:bg-[#d9dde6] text-[#3d506c] font-semibold" onClick={() => setIsPopupOpen(true)}>
+              <GoPlus className="font-semibold" /> Add new Student
             </Button>
           </div>
+
           {/* Table */}
           <div className="bg-white rounded-lg overflow-x-auto">
             <table className="w-full">
@@ -133,34 +153,52 @@ const Home = () => {
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-800">
                     Status
                   </th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-800">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {students.map((student, index) => (
-                  <tr key={index}>
+                {items.map((student, index) => (
+                  <tr key={student.id || index}>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {student.name}
+                      {student.studentName}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {student.cohort}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="flex gap-2">
-                        <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                          <img src="./profile.jpg" className="h-[20px] rounded mr-2"></img>
-                          CBSE 9 Science
-                        </span>
-                        <span className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs">
-                        <img src="./profile.jpg" className="h-[20px] rounded mr-2"></img>
-                          CBSE 9 Maths
-                        </span>
+                        {student.courses?.map((course, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-2 py-1 bg-gray-100 rounded text-xs"
+                          >
+                            <img
+                              src={course.courseImg}
+                              className="h-[20px] rounded mr-2"
+                              alt={course.title}
+                            />
+                            {course.title}
+                          </span>
+                        ))}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {student.dateJoined}
+                      {new Date(student.createdAt).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {student.lastLogin}
+                      {new Date(student.lastLogin).toLocaleDateString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span
@@ -171,6 +209,10 @@ const Home = () => {
                         }`}
                       />
                     </td>
+                    <td className="flex gap-2 px-6 py-4 text-sm">
+                      <MdOutlineModeEdit className="text-xl cursor-pointer my-2 text-[#73767a]" onClick={()=>handleEditClick(student.id)}/>
+                      <MdDeleteOutline className="text-xl my-2 cursor-pointer text-[#73767a]" onClick={()=> handleDelete(student.id)}/>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -178,6 +220,27 @@ const Home = () => {
           </div>
         </div>
       </div>
+      {isPopupOpen && (
+        <AddEditPopup
+          isOpen={isPopupOpen}
+          onClose={() => {
+            setIsPopupOpen(false);
+            setEditingStudent(null);
+          }}
+          editData={editingStudent}
+        />
+      )}
+      {isDeleteOpen && (
+        <DeleteConfirmationPopup
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        setIsDeleteOpen={setIsDeleteOpen}
+        onConfirm={handleConfirmDelete}
+        itemToDelete={itemToDelete}
+        title="Delete Student"
+        description="Are you sure you want to delete this student? All their data will be permanently removed."
+      />
+      )}
     </Layout>
   );
 };
